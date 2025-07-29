@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Scan Barcode</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        padding: 20px;
+      }
+      #reader {
+        width: 100%;
+        max-width: 400px;
+        margin: auto;
+      }
+      select,
+      button {
+        padding: 10px;
+        margin-top: 10px;
+      }
+      #result {
+        margin-top: 20px;
+        font-weight: bold;
+        font-size: 1.2em;
+        color: green;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Scan Barcode / QR Code</h2>
+
+    <div>
+      <select id="camera-select"></select
+      ><br />
+      <button onclick="startScanner()">Start Scanning</button>
+    </div>
+
+    <div id="reader"></div>
+
+    <div id="result"></div>
+
+    <script>
+      let html5QrCode;
+      const readerId = "reader";
+      const resultElement = document.getElementById("result");
+      const cameraSelect = document.getElementById("camera-select");
+
+      async function getCameras() {
+        const devices = await Html5Qrcode.getCameras();
+        devices.forEach((device) => {
+          const option = document.createElement("option");
+          option.value = device.id;
+          option.text = device.label || `Camera ${cameraSelect.length + 1}`;
+          cameraSelect.appendChild(option);
+        });
+      }
+
+      async function startScanner() {
+        const selectedCameraId = cameraSelect.value;
+        if (!selectedCameraId) return alert("Please select a camera.");
+
+        if (html5QrCode) {
+          await html5QrCode.stop();
+        }
+
+        html5QrCode = new Html5Qrcode(readerId);
+        html5QrCode.start(
+          selectedCameraId,
+          {
+            fps: 10,
+            qrbox: 250,
+          },
+          (qrCodeMessage) => {
+            resultElement.innerText = `Hasil: ${qrCodeMessage}`;
+          },
+          (errorMessage) => {
+            // Optional: handle scan errors
+          }
+        );
+      }
+
+      getCameras();
+    </script>
+  </body>
+</html>
