@@ -1,87 +1,62 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
   <head>
     <meta charset="UTF-8" />
-    <title>Scan Barcode</title>
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        text-align: center;
-        padding: 20px;
-      }
-      #reader {
-        width: 100%;
-        max-width: 400px;
-        margin: auto;
-      }
-      select,
-      button {
-        padding: 10px;
-        margin-top: 10px;
-      }
-      #result {
-        margin-top: 20px;
-        font-weight: bold;
-        font-size: 1.2em;
-        color: green;
-      }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Informasi Gempa Terkini - BMKG</title>
+    <script src="https://cdn.tailwindcss.com"></script>
   </head>
-  <body>
-    <h2>Scan Barcode / QR Code</h2>
-
-    <div>
-      <select id="camera-select"></select
-      ><br />
-      <button onclick="startScanner()">Start Scanning</button>
+  <body class="bg-gray-100 text-gray-800 p-6">
+    <div class="max-w-3xl mx-auto bg-white rounded-xl shadow-md p-6">
+      <h1 class="text-3xl font-bold text-blue-800 mb-4">
+        🌀 Informasi Gempa Terkini - BMKG
+      </h1>
+      <div id="gempa-container" class="space-y-4">
+        <p>Memuat data gempa...</p>
+      </div>
     </div>
 
-    <div id="reader"></div>
-
-    <div id="result"></div>
-
     <script>
-      let html5QrCode;
-      const readerId = "reader";
-      const resultElement = document.getElementById("result");
-      const cameraSelect = document.getElementById("camera-select");
+      async function ambilDataGempa() {
+        try {
+          const response = await fetch(
+            "https://data.bmkg.go.id/DataMKG/TEWS/gempaterkini.json"
+          );
+          const data = await response.json();
 
-      async function getCameras() {
-        const devices = await Html5Qrcode.getCameras();
-        devices.forEach((device) => {
-          const option = document.createElement("option");
-          option.value = device.id;
-          option.text = device.label || `Camera ${cameraSelect.length + 1}`;
-          cameraSelect.appendChild(option);
-        });
-      }
+          const gempaList = data.Infogempa.gempa;
+          const container = document.getElementById("gempa-container");
 
-      async function startScanner() {
-        const selectedCameraId = cameraSelect.value;
-        if (!selectedCameraId) return alert("Please select a camera.");
+          container.innerHTML = ""; // Kosongkan isi awal
 
-        if (html5QrCode) {
-          await html5QrCode.stop();
+          gempaList.forEach((gempa, index) => {
+            const gempaCard = document.createElement("div");
+            gempaCard.className =
+              "bg-blue-50 p-4 rounded-lg shadow border border-blue-200";
+
+            gempaCard.innerHTML = `
+            <h2 class="text-xl font-semibold mb-2 text-blue-700">Gempa #${
+              index + 1
+            }</h2>
+            <p><strong>Tanggal:</strong> ${gempa.Tanggal}</p>
+            <p><strong>Jam:</strong> ${gempa.Jam}</p>
+            <p><strong>Magnitude:</strong> ${gempa.Magnitude}</p>
+            <p><strong>Kedalaman:</strong> ${gempa.Kedalaman}</p>
+            <p><strong>Wilayah:</strong> ${gempa.Wilayah}</p>
+            <p><strong>Koordinat:</strong> ${gempa.Coordinates}</p>
+            <p><strong>Potensi:</strong> ${gempa.Potensi}</p>
+          `;
+
+            container.appendChild(gempaCard);
+          });
+        } catch (error) {
+          document.getElementById("gempa-container").innerHTML =
+            "<p class='text-red-500'>Gagal memuat data gempa dari BMKG.</p>";
+          console.error("Error mengambil data gempa:", error);
         }
-
-        html5QrCode = new Html5Qrcode(readerId);
-        html5QrCode.start(
-          selectedCameraId,
-          {
-            fps: 10,
-            qrbox: 250,
-          },
-          (qrCodeMessage) => {
-            resultElement.innerText = `Hasil: ${qrCodeMessage}`;
-          },
-          (errorMessage) => {
-            // Optional: handle scan errors
-          }
-        );
       }
 
-      getCameras();
+      ambilDataGempa();
     </script>
   </body>
 </html>
